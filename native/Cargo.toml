@@ -1,0 +1,11 @@
+[package]
+name = "tilemap-flowfields-native"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+gdnative = "0.11"
+rayon = "1.5.3"

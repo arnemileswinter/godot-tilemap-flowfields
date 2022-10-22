@@ -23,7 +23,7 @@ For each tile, a "FlowFieldTileCost" node must be added as a child Node of the G
 
 If you require a different approach, feel free to open an issue or contribute! :)
 
-### AdHoc flow-field calculation
+### AdHoc flow field calculation
 
 Use `$FlowFieldGenerator.calculate_flow_field(to : Vector2)` to retrieve a flow field towards the target vector.
 Note that this `to` vector must be in tile-space of your tile-map. Transfer coordinate systems with `TileMap.world_to_map` and `TileMap.to_local` accordingly, before invocation.
@@ -32,7 +32,7 @@ The return-value supports a function `flow(to: Vector2)` (with `to` also in map-
 
 Open the [Example Scene](https://github.com/arnemileswinter/godot-tilemap-flowfields/tree/main/addons/tilemap_flowfields/examples/adhoc) to see it all in action.
 
-### Baked Flowfield calculation
+### Baked flow field calculation
 
 With `$FlowFieldGenerator.bake_flow_fields()` you receive an instance of `BakedFlowFields` supporting the Function `flow_from_to(from:Vector2,to:Vector2)`, with all flow-fields cached. Pathfinding is then happening in constant time.
 

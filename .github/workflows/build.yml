@@ -21,7 +21,7 @@ jobs:
           RUSTTARGET: ${{ matrix.target }}
           UPLOAD_MODE: none
           SRC_DIR: "native"
-          EXTRA_FILES: "README.md LICENSE"
+          EXTRA_FILES: "README.md LICENSE.md"
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:

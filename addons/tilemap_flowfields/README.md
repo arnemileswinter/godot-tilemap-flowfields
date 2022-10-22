@@ -65,6 +65,11 @@ Don't forget to give the project a star! Thanks again!
   </a>
 </div>
 
+## Compiling
+
+A `justfile` is provided: development binaries are built with `just`, releasing is done via `just build-release`.
+The Godot editor must be closed prior to building, else it segfaults because the FlowfieldGenerator is a tool-script.
+
 ## Known Issues
 
 - Because of [this issue](https://github.com/godot-rust/godot-rust/issues/905) in the Godot-Engine, it is currently not possible to type-hint the "FlowField" or "BakedFlowFields" Resources properly.

@@ -121,9 +121,11 @@ impl FlowFieldGenerator {
             let (to_x, to_y) = (to_xf as isize, to_yf as isize);
             match self.generate_cost_field(base) {
                 Ok((dim, cost)) => {
-                    let integration_field =
+                    let opt_integration_field =
                         algo::calculate_integration_field(&dim, (to_x, to_y), &cost);
-                    let flow_field = algo::calculate_flow_field(&dim, &integration_field);
+                    let flow_field = opt_integration_field.map(|integration_field| {
+                        algo::calculate_flow_field(&dim, &integration_field)
+                    });
 
                     Some(
                         crate::flowfield::FlowFieldFactory::create(dim, flow_field)
@@ -161,9 +163,11 @@ impl FlowFieldGenerator {
                     .collect::<Vec<(isize, isize)>>()
                     .into_par_iter()
                     .map(move |(x, y)| {
-                        let integration_field =
+                        let opt_integration_field =
                             algo::calculate_integration_field(dim, (x, y), cost);
-                        let field = algo::calculate_flow_field(dim, &integration_field);
+                        let field = opt_integration_field.map(|integration_field| {
+                            algo::calculate_flow_field(dim, &integration_field)
+                        });
                         crate::flowfield::FlowFieldFactory::create(d, field)
                     })
                     .collect();
@@ -171,7 +175,11 @@ impl FlowFieldGenerator {
                     "FlowFieldGenerator: Successfully baked {} Flow Fields to Resource!",
                     dim.max_idx()
                 );
-                Some(BakedFlowFieldsFactory::create(d, flow_fields).emplace().into_shared())
+                Some(
+                    BakedFlowFieldsFactory::create(d, flow_fields)
+                        .emplace()
+                        .into_shared(),
+                )
             }
             Err(m) => {
                 godot_error!("FlowFieldGenerator: Error calculating cost map: {}", m);

@@ -21,4 +21,4 @@ func _physics_process(delta):
 		var target_map_position : Vector2 = _tile_map.world_to_map(_tile_map.to_local(_target_world_position))
 		new_velocity = _baked_flow_fields.flow_from_to(current_map_position, target_map_position)
 		rotation = new_velocity.angle()
-	_velocity = move_and_slide(new_velocity * 50)
+	_velocity = move_and_slide(new_velocity * 250)

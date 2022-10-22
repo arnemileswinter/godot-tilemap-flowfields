@@ -23,12 +23,12 @@ trait HasDim {
 
 pub struct FlowFieldFactory {}
 impl FlowFieldFactory {
-    pub fn create(dim: algo::Dimensions, field: algo::FlowField) -> FlowField {
+    pub fn create(dim: algo::Dimensions, opt_field: Option<algo::FlowField>) -> FlowField {
         FlowField {
             dim,
             width: dim.width() as u64,
             height: dim.height() as u64,
-            field,
+            opt_field,
         }
     }
 }
@@ -43,7 +43,7 @@ pub struct FlowField {
     #[property]
     height: u64,
     #[property]
-    field: algo::FlowField,
+    opt_field: Option<algo::FlowField>,
 }
 
 impl HasDim for FlowField {
@@ -61,7 +61,9 @@ impl HasDim for FlowField {
 impl FlowField {
     fn can_flow_internal(&self, (from_x, from_y): algo::Coord) -> bool {
         self.dim.in_bounds(from_x, from_y)
-            && self.field[self.dim.project_to_field_idx(from_x, from_y)].is_some()
+            && self.opt_field.as_ref().map_or(false, |field| {
+                field[self.dim.project_to_field_idx(from_x, from_y)].is_some()
+            })
     }
 
     fn flow_internal(
@@ -69,15 +71,16 @@ impl FlowField {
         from @ (from_x, from_y): algo::Coord,
     ) -> Result<algo::Vector2D, String> {
         if !self.dim.in_bounds(from_x, from_y) {
-            Err(format!("FlowField: position {:#?} out of bounds!", from))
-        } else if let Some((vx, vy)) = self.field[self.dim.project_to_field_idx(from_x, from_y)] {
-            Ok((vx, vy))
-        } else {
-            Err(format!(
-                "FlowField: unreachable position {:#?} queried!",
-                from
-            ))
+            return Err(format!("FlowField: position {:#?} out of bounds!", from));
+        } else if let Some(field) = &self.opt_field {
+            if let Some((vx, vy)) = field[self.dim.project_to_field_idx(from_x, from_y)] {
+                return Ok((vx, vy));
+            }
         }
+        Err(format!(
+            "FlowField: unreachable position {:#?} queried!",
+            from
+        ))
     }
 }
 
@@ -88,16 +91,16 @@ impl FlowField {
             dim: algo::Dimensions::new(0, 0),
             width: 0,
             height: 0,
-            field: vec![],
+            opt_field: None,
         }
     }
 
     fn register_properties(builder: &ClassBuilder<FlowField>) {
         builder
             .property("field")
-            .with_getter(|s, _| s.field.to_owned())
-            .with_setter(|s: &mut Self, _, new_val: algo::FlowField| s.field = new_val)
-            .with_default(vec![])
+            .with_getter(|s, _| s.opt_field.to_owned())
+            .with_setter(|s: &mut Self, _, new_val: Option<algo::FlowField>| s.opt_field = new_val)
+            .with_default(None)
             .done();
         builder
             .property("width")
@@ -126,10 +129,7 @@ impl FlowField {
                 godot_error!("FlowField: {}", msg);
                 false
             }
-            Ok((x, y)) => {
-                self.dim.in_bounds(x, y)
-                    && self.field[self.dim.project_to_field_idx(x, y)].is_some()
-            }
+            Ok((x, y)) => self.can_flow_internal((x, y)),
         }
     }
 
@@ -253,14 +253,14 @@ impl BakedFlowFields {
                 godot_error!("FlowField: {}", msg);
                 Vector2::ZERO
             }
-            Ok(((to_x, to_y), (from_x, from_y))) => 
-                self.flow_fields [self.dim.project_to_field_idx(to_x, to_y)]
-                .flow_internal((from_x, from_y))
-                .map(|(vx, vy)| Vector2 { x: vx, y: vy })
-                .unwrap_or_else(|e| {
-                    godot_warn!("BakedFlowField: Error querying baked flow field {}", e);
-                    Vector2::ZERO
-                }),
+            Ok(((to_x, to_y), (from_x, from_y))) => self.flow_fields
+                [self.dim.project_to_field_idx(to_x, to_y)]
+            .flow_internal((from_x, from_y))
+            .map(|(vx, vy)| Vector2 { x: vx, y: vy })
+            .unwrap_or_else(|e| {
+                godot_warn!("BakedFlowField: Error querying baked flow field {}", e);
+                Vector2::ZERO
+            }),
         }
     }
 }

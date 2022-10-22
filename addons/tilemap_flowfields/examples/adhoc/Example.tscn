@@ -61,7 +61,6 @@ points = PoolVector2Array( 16, 16, 0, 16, 0, 0, 16, 0 )
 
 [node name="Example" type="Node2D"]
 script = ExtResource( 5 )
-generate_debug_vectors = true
 
 [node name="TileMap" type="TileMap" parent="."]
 tile_set = SubResource( 1 )
@@ -109,7 +108,8 @@ margin_right = 780.0
 margin_bottom = 356.0
 custom_colors/font_color = Color( 0, 0, 0, 1 )
 text = "Water is expensive to navigate.
-Its cost per tile is 5."
+Its cost per tile is 5.
+We try to avoid it."
 
 [node name="Wall Label" type="Label" parent="."]
 margin_left = 257.0
@@ -119,13 +119,19 @@ margin_bottom = 550.0
 custom_colors/font_color = Color( 0, 0, 0, 1 )
 text = "Walls are impassable.
 You can ignore the cost.
-Note, in this example they also have physics collision."
+Note, in this example they also have physics collision,
+to prevent agents to be pushed into impassable tiles."
 
 [node name="Empty Label" type="Label" parent="."]
-margin_left = 65.0
-margin_top = 349.0
-margin_right = 423.0
-margin_bottom = 380.0
+margin_left = -46.0
+margin_top = 324.0
+margin_right = 312.0
+margin_bottom = 406.0
 custom_colors/font_color = Color( 0, 0, 0, 1 )
 text = "These empty tiles 
-are impassable too."
+are impassable too.
+They do not have collision assigned,
+ so agents might push others into them.
+In this case, can_flow returns false,
+and a warning is generated."
+align = 1

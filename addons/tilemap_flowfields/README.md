@@ -4,7 +4,7 @@ RTS-Style optimized path-finding and for large crowds of agents for Godot game e
 
 <div align="center">
   <a href="https://github.com/arnemileswinter/godot-tilemap-flowfields">
-    <img src=".screenshots/screenshot1" alt="Screenshot 1">
+    <img src=".screenshots/screenshot1.png" alt="Screenshot 1">
   </a>
 </div>
 
@@ -61,7 +61,7 @@ Don't forget to give the project a star! Thanks again!
 
 <div align="center">
   <a href="https://github.com/arnemileswinter/godot-tilemap-flowfields">
-    <img src=".screenshots/screenshot2" alt="Screenshot 2">
+    <img src=".screenshots/screenshot2.png" alt="Screenshot 2">
   </a>
 </div>
 

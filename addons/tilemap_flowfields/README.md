@@ -2,7 +2,11 @@
 
 RTS-Style optimized path-finding and for large crowds of agents for Godot game engine, written with performance in mind in Rust with [godot-rust](https://godot-rust.github.io).
 
-[![Godot Flow-Fields][Screenshot1]](https://github.com/arnemileswinter/godot-tilemap-flowfields/blob/main/.screenshots/screenshot1.png)
+<div align="center">
+  <a href="https://github.com/arnemileswinter/godot-tilemap-flowfields">
+    <img src=".screenshots/screenshot1" alt="Screenshot 1">
+  </a>
+</div>
 
 
 ## Installation
@@ -15,6 +19,9 @@ Its not yet currently on the Godot asset place.
 Create a "FlowFieldGenerator" node and assign to it the TileMap you wish to use.
 For each tile, a "FlowFieldTileCost" node must be added as a child Node of the Generator. 
 
+**Note that currently only Euclidean Path-Finding is implemented.**
+
+If you require a different approach, feel free to open an issue or contribute! :)
 
 ### AdHoc flow-field calculation
 
@@ -23,7 +30,7 @@ Note that this `to` vector must be in tile-space of your tile-map. Transfer coor
 
 The return-value supports a function `flow(to: Vector2)` (with `to` also in map-space) to query the calculated flow field from the agent's position.
 
-Open the (Example Scene)(https://github.com/arnemileswinter/godot-tilemap-flowfields/tree/main/addons/tilemap_flowfields/examples/adhoc) to see it all in action.
+Open the [Example Scene](https://github.com/arnemileswinter/godot-tilemap-flowfields/tree/main/addons/tilemap_flowfields/examples/adhoc) to see it all in action.
 
 ### Baked Flowfield calculation
 
@@ -31,6 +38,8 @@ With `$FlowFieldGenerator.bake_flow_fields()` you receive an instance of `BakedF
 
 Baking all flow-fields creates huge files, however, and is also not recommended for scenarios where your game map changes dynamically. It is recommended to use `$FlowFieldGenerator.calculate_flow_field(to : Vector2)`.
 Only use baked fields if your map is static and fast-paced path-finding is essential.
+
+The [Baked Example Scene](https://github.com/arnemileswinter/godot-tilemap-flowfields/tree/main/addons/tilemap_flowfields/examples/adhoc) is an example on how to save your baked flow-field as a resource.
 
 ## Platforms
 
@@ -50,4 +59,15 @@ Don't forget to give the project a star! Thanks again!
 4. Push to the Branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-[![Godot Flow-Fields][Screenshot2]](!https://github.com/arnemileswinter/godot-tilemap-flowfields/blob/main/.screenshots/screenshot2.png)
+<div align="center">
+  <a href="https://github.com/arnemileswinter/godot-tilemap-flowfields">
+    <img src=".screenshots/screenshot2" alt="Screenshot 2">
+  </a>
+</div>
+
+## Known Issues
+
+- Because of [this issue](https://github.com/godot-rust/godot-rust/issues/905) in the Godot-Engine, it is currently not possible to type-hint the "FlowField" or "BakedFlowFields" Resources properly.
+The only type hint that you can use within gdscript `Resource`.
+
+- Not a bug but if your Agent wanders onto an impassable tile (either its cost is impassable or there is no tile at their position) it will no longer move. It is on you to prevent Agent's wandering or pushing one another into such locations. Either by using Physics and proper collision shapes, or by an approach such as Boids or the like.

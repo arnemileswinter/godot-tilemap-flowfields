@@ -1,12 +1,15 @@
 # .github/workflows/release.yml
+name: Rust
 
 on:
-  release:
-    types: [created]
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
 jobs:
-  release:
-    name: release ${{ matrix.target }}
+  build:
+    name: build ${{ matrix.target }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false

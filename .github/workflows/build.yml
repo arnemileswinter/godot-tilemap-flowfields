@@ -10,8 +10,11 @@ jobs:
       matrix:
         include:
           - target: x86_64-pc-windows-gnu
+            bin: native/target/libflowfield_tilemap_native.dll
           - target: x86_64-unknown-linux-musl
+            bin: native/target/libflowfield_tilemap_native.so
           - target: x86_64-apple-darwin
+            bin: native/target/libflowfield_tilemap_native.so
     steps: 
       - name: checkout
         uses: actions/checkout@master
@@ -24,7 +27,7 @@ jobs:
           UPLOAD_MODE: none
           SRC_DIR: "native"
           NAME: ${{ matrix.name }}
-          EXTRA-FILES: "**/*.so **/*.dll"
+          EXTRA-FILES: ${{ matrix.bin }}
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:

@@ -1,10 +1,9 @@
 # Godot Tilemap Flowfields
 
-RTS-Style optimized path-finding and for large crowds of agents for Godot game engine, written with performance in mind in Rust with (godot-rust)[https://godot-rust.github.io].
+RTS-Style optimized path-finding and for large crowds of agents for Godot game engine, written with performance in mind in Rust with [godot-rust](https://godot-rust.github.io).
 
-[!https://github.com/arnemileswinter/godot-tilemap-flowfields/blob/main/.screenshots/screenshot1.png]
+[![Godot Flow-Fields][Screenshot1]](https://github.com/arnemileswinter/godot-tilemap-flowfields/blob/main/.screenshots/screenshot1.png)
 
-[!https://github.com/arnemileswinter/godot-tilemap-flowfields/blob/main/.screenshots/screenshot2.png]
 
 ## Installation
 
@@ -50,3 +49,5 @@ Don't forget to give the project a star! Thanks again!
 3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
 4. Push to the Branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
+
+[![Godot Flow-Fields][Screenshot2]](!https://github.com/arnemileswinter/godot-tilemap-flowfields/blob/main/.screenshots/screenshot2.png)

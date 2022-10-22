@@ -1,6 +1,6 @@
 # Godot Tilemap Flowfields
 
-RTS-Style optimized path-finding and for large crowds of agents for Godot game engine, written with performance in mind in Rust with [godot-rust](https://godot-rust.github.io).
+RTS-Style optimized path-finding for crowds of agents. Built for the Godot game engine, written with performance in mind in Rust with [godot-rust](https://godot-rust.github.io).
 
 <div align="center">
   <a href="https://github.com/arnemileswinter/godot-tilemap-flowfields">

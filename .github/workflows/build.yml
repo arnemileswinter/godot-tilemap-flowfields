@@ -21,7 +21,7 @@ jobs:
           RUSTTARGET: ${{ matrix.target }}
           UPLOAD_MODE: none
           SRC_DIR: "native"
-          EXTRA_FILES: "native/target"
+          EXTRA_FILES: "target"
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:

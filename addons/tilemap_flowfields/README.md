@@ -1,2 +1,52 @@
-# Tilemap Flowfields
+# Godot Tilemap Flowfields
 
+RTS-Style optimized path-finding and for large crowds of agents for Godot game engine, written with performance in mind in Rust with (godot-rust)[https://godot-rust.github.io].
+
+[!https://github.com/arnemileswinter/godot-tilemap-flowfields/blob/main/.screenshots/screenshot1.png]
+
+[!https://github.com/arnemileswinter/godot-tilemap-flowfields/blob/main/.screenshots/screenshot2.png]
+
+## Installation
+
+Download this repository as zip and unpack to your game folder.
+Its not yet currently on the Godot asset place.
+
+## Usage
+
+Create a "FlowFieldGenerator" node and assign to it the TileMap you wish to use.
+For each tile, a "FlowFieldTileCost" node must be added as a child Node of the Generator. 
+
+
+### AdHoc flow-field calculation
+
+Use `$FlowFieldGenerator.calculate_flow_field(to : Vector2)` to retrieve a flow field towards the target vector.
+Note that this `to` vector must be in tile-space of your tile-map. Transfer coordinate systems with `TileMap.world_to_map` and `TileMap.to_local` accordingly, before invocation.
+
+The return-value supports a function `flow(to: Vector2)` (with `to` also in map-space) to query the calculated flow field from the agent's position.
+
+Open the (Example Scene)(https://github.com/arnemileswinter/godot-tilemap-flowfields/tree/main/addons/tilemap_flowfields/examples/adhoc) to see it all in action.
+
+### Baked Flowfield calculation
+
+With `$FlowFieldGenerator.bake_flow_fields()` you receive an instance of `BakedFlowFields` supporting the Function `flow_from_to(from:Vector2,to:Vector2)`, with all flow-fields cached. Pathfinding is then happening in constant time.
+
+Baking all flow-fields creates huge files, however, and is also not recommended for scenarios where your game map changes dynamically. It is recommended to use `$FlowFieldGenerator.calculate_flow_field(to : Vector2)`.
+Only use baked fields if your map is static and fast-paced path-finding is essential.
+
+## Platforms
+
+Currently only Linux/X11 x86_64 is officially compiled.
+Windows support is coming ASAP.
+
+## Contributing
+
+Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+
+If you have a suggestion that would make this better, please fork the repo and create a pull request. You can also simply open an issue with the tag "enhancement".
+Don't forget to give the project a star! Thanks again!
+
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request

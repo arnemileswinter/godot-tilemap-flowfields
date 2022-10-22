@@ -20,17 +20,10 @@ jobs:
           - target: x86_64-apple-darwin
     steps:
       - uses: actions/checkout@master
-      - name: Compile
+      - name: build
         uses: rust-build/rust-build.action@v1.3.2
-        id: compile
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           RUSTTARGET: ${{ matrix.target }}
           SRC_DIR: native
-          UPLOAD_MODE: none
-      - name: Upload artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: Binary
-          path: |
-            ${{ steps.compile.outputs.BUILT_ARCHIVE }}
-            ${{ steps.compile.outputs.BUILT_CHECKSUM }}

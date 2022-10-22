@@ -2,6 +2,10 @@ on:
   push: 
     branches: "main"
 
+defaults:
+ run:
+  working-directory: ./native
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -10,18 +14,15 @@ jobs:
       matrix:
         include:
           - target: x86_64-pc-windows-gnu
-            bin: native/target/libflowfield_tilemap_native.dll
           - target: x86_64-unknown-linux-musl
-            bin: native/target/libflowfield_tilemap_native.so
           - target: x86_64-apple-darwin
-            bin: native/target/libflowfield_tilemap_native.so
     steps: 
       - name: checkout
         uses: actions/checkout@master
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-          target: ${{ matrix.target }}
+          target: ${{ matrix.target }}  
       - name: build
         uses: actions-rs/cargo@v1
         id: build
@@ -29,3 +30,8 @@ jobs:
           command: build
           use-cross: true
           args: --release --target ${{ matrix.target }}
+      - uses: actions/upload-artifact@v3
+        with:
+          path: |
+            **/*.dll
+            **/*.so

@@ -24,6 +24,7 @@ jobs:
           UPLOAD_MODE: none
           SRC_DIR: "native"
           NAME: ${{ matrix.name }}
+          EXTRA-FILES: "**/*.so **/*.dll"
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:

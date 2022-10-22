@@ -8,7 +8,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [x86_64-pc-windows-gnu,x86_64-unknown-linux-musl,x86_64-apple-darwin]
+        include:
+          - target: x86_64-pc-windows-gnu
+            name: windows-amd64
+          - target: x86_64-unknown-linux-musl
+            name: linux-amd64
+          - target: x86_64-apple-darwin
+            name: darwin-amd64
     steps: 
       - name: checkout
         uses: actions/checkout@master
@@ -17,11 +23,11 @@ jobs:
         id: compile
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
           RUSTTARGET: ${{ matrix.target }}
           UPLOAD_MODE: none
           SRC_DIR: "native"
           EXTRA_FILES: "target"
+          NAME: ${{ matrix.name }}
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:

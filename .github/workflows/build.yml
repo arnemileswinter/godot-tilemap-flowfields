@@ -2,10 +2,6 @@ on:
   push: 
     branches: "main"
 
-defaults:
- run:
-  working-directory: ./native
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -29,7 +25,7 @@ jobs:
         with:
           command: build
           use-cross: true
-          args: --release --target ${{ matrix.target }}
+          args: --release --target ${{ matrix.target }} --manifest-path native/Cargo.toml
       - uses: actions/upload-artifact@v3
         with:
           path: |

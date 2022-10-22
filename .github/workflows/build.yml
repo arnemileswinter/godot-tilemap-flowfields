@@ -18,20 +18,14 @@ jobs:
     steps: 
       - name: checkout
         uses: actions/checkout@master
-      - name: compile
-        uses: rust-build/rust-build.action@v1.3.2
-        id: compile
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RUSTTARGET: ${{ matrix.target }}
-          UPLOAD_MODE: none
-          SRC_DIR: "native"
-          NAME: ${{ matrix.name }}
-          EXTRA-FILES: ${{ matrix.bin }}
-      - name: Upload artifact
-        uses: actions/upload-artifact@v3
+      - uses: actions-rs/toolchain@v1
         with:
-          name: Binary
-          path: |
-            ${{ steps.compile.outputs.BUILT_ARCHIVE }}
-            ${{ steps.compile.outputs.BUILT_CHECKSUM }}
+          toolchain: stable
+          target: ${{ matrix.target }}
+      - name: build
+        uses: actions-rs/cargo@v1
+        id: build
+        with:
+          command: build
+          use-cross: true
+          args: --release --target ${{ matrix.target }}

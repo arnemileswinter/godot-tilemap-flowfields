@@ -1,3 +1,4 @@
+use rayon::prelude::*;
 use std::collections::VecDeque;
 use std::f32::consts::{FRAC_1_SQRT_2, SQRT_2};
 
@@ -82,6 +83,9 @@ impl Dimensions {
     }
     pub fn project_to_field_idx(&self, x: isize, y: isize) -> usize {
         (x + y * self.width as isize) as usize
+    }
+    pub fn unproject_to_field_coords(&self, idx: usize) -> Coord {
+        ((idx % self.width) as isize, (idx / self.width) as isize)
     }
     pub fn in_bounds(&self, x: isize, y: isize) -> bool {
         x >= 0 && x < self.width as isize && y >= 0 && y < self.height as isize
@@ -192,7 +196,6 @@ pub fn calculate_flow_field(dim: &Dimensions, integration_field: &IntegrationFie
         integration_field.len(),
         "Integration field size does not match dimensions!"
     );
-    let mut flow_field: FlowField = vec![None; dim.max_idx()];
     let integration_at = |x, y, dir: Dir| {
         let (x_off, y_off) = dir.offset();
         let (x_next, y_next) = (x + x_off, y + y_off);
@@ -224,56 +227,50 @@ pub fn calculate_flow_field(dim: &Dimensions, integration_field: &IntegrationFie
                 }
             })
         };
+    let mut flow_field = vec![None;dim.max_idx()];
+    (0..dim.max_idx()).into_par_iter().map(|idx| {
+        let (x,y) = dim.unproject_to_field_coords(idx);
 
-    for x in 0..dim.width as isize {
-        for y in 0..dim.height as isize {
-            let current_vec = &mut flow_field[dim.project_to_field_idx(x, y)];
-            if integration_field[dim.project_to_field_idx(x, y)].is_none() {
-                *current_vec = None;
-                continue;
-            }
-            let c_n = integration_at(x, y, North);
-            let c_ne = integration_at(x, y, NorthEast);
-            let c_e = integration_at(x, y, East);
-            let c_se = integration_at(x, y, SouthEast);
-            let c_s = integration_at(x, y, South);
-            let c_sw = integration_at(x, y, SouthWest);
-            let c_w = integration_at(x, y, West);
-            let c_nw = integration_at(x, y, SouthWest);
+        integration_field[dim.project_to_field_idx(x, y)]?;
+        let c_n = integration_at(x, y, North);
+        let c_ne = integration_at(x, y, NorthEast);
+        let c_e = integration_at(x, y, East);
+        let c_se = integration_at(x, y, SouthEast);
+        let c_s = integration_at(x, y, South);
+        let c_sw = integration_at(x, y, SouthWest);
+        let c_w = integration_at(x, y, West);
+        let c_nw = integration_at(x, y, SouthWest);
 
-            *current_vec = {
-                let c = *[c_n, c_ne, c_e, c_se, c_s, c_sw, c_w, c_nw]
-                    .iter()
-                    .reduce(|last_lowest, i| match (i, last_lowest) {
-                        (Some(c), Some(d)) if c < d => i,
-                        (Some(_), None) => i,
-                        _ => last_lowest,
-                    })
-                    .unwrap();
-                /* given a desired flowing-cost, maps to the flow-field vector respecting passability. */
-                let flow = |desired_dir: Dir| c.map(|_| desired_dir.flow_vec());
-                if c == c_n {
-                    flow(North)
-                } else if c == c_ne {
-                    flow_without_corner_cutting((c_ne, NorthEast), (c_n, North), (c_e, East))
-                } else if c == c_e {
-                    flow(East)
-                } else if c == c_se {
-                    flow_without_corner_cutting((c_se, SouthEast), (c_s, South), (c_e, East))
-                } else if c == c_s {
-                    flow(South)
-                } else if c == c_sw {
-                    flow_without_corner_cutting((c_sw, SouthWest), (c_s, South), (c_w, West))
-                } else if c == c_w {
-                    flow(West)
-                } else if c == c_nw {
-                    flow_without_corner_cutting((c_nw, NorthWest), (c_n, North), (c_w, West))
-                } else {
-                    unreachable!()
-                }
-            }
+        let c = *[c_n, c_ne, c_e, c_se, c_s, c_sw, c_w, c_nw]
+                .iter()
+                .reduce(|last_lowest, i| match (i, last_lowest) {
+                    (Some(c), Some(d)) if c < d => i,
+                    (Some(_), None) => i,
+                    _ => last_lowest,
+                })
+                .unwrap();
+        /* given a desired flowing-cost, maps to the flow-field vector respecting passability. */
+        let flow = |desired_dir: Dir| c.map(|_| desired_dir.flow_vec());
+        if c == c_n {
+            flow(North)
+        } else if c == c_ne {
+            flow_without_corner_cutting((c_ne, NorthEast), (c_n, North), (c_e, East))
+        } else if c == c_e {
+            flow(East)
+        } else if c == c_se {
+            flow_without_corner_cutting((c_se, SouthEast), (c_s, South), (c_e, East))
+        } else if c == c_s {
+            flow(South)
+        } else if c == c_sw {
+            flow_without_corner_cutting((c_sw, SouthWest), (c_s, South), (c_w, West))
+        } else if c == c_w {
+            flow(West)
+        } else if c == c_nw {
+            flow_without_corner_cutting((c_nw, NorthWest), (c_n, North), (c_w, West))
+        } else {
+            unreachable!()
         }
-    }
+    }).collect_into_vec(&mut flow_field);
     flow_field
 }
 

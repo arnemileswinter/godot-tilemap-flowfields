@@ -8,9 +8,38 @@
 
 config_version=4
 
+_global_script_classes=[ {
+"base": "Resource",
+"class": "BakedFlowFields",
+"language": "NativeScript",
+"path": "res://addons/tilemap_flowfields/classes/baked_flow_fields.gdns"
+}, {
+"base": "Resource",
+"class": "FlowField",
+"language": "NativeScript",
+"path": "res://addons/tilemap_flowfields/classes/flow_field.gdns"
+}, {
+"base": "Node",
+"class": "FlowFieldGenerator",
+"language": "NativeScript",
+"path": "res://addons/tilemap_flowfields/classes/flow_field_generator.gdns"
+}, {
+"base": "Node",
+"class": "FlowFieldTileCost",
+"language": "NativeScript",
+"path": "res://addons/tilemap_flowfields/classes/flow_field_tile_cost.gdns"
+} ]
+_global_script_class_icons={
+"BakedFlowFields": "",
+"FlowField": "",
+"FlowFieldGenerator": "",
+"FlowFieldTileCost": ""
+}
+
 [application]
 
 config/name="tilemap-flowfields"
+run/main_scene="res://addons/tilemap_flowfields/examples/adhoc/Example.tscn"
 
 [editor_plugins]
 

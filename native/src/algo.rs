@@ -1,7 +1,14 @@
 use std::collections::VecDeque;
 use std::f32::consts::{FRAC_1_SQRT_2, SQRT_2};
 
-#[derive(Clone, Copy)]
+#[derive(
+    Clone,
+    Copy,
+    serde::Serialize,
+    serde::Deserialize,
+    gdnative::prelude::FromVariant,
+    gdnative::prelude::ToVariant,
+)]
 pub struct Dimensions {
     width: usize,
     height: usize,
@@ -63,7 +70,7 @@ pub fn calculate_integration_field(
         match queue.pop_front() {
             None => (), // queue empty.
             Some((x, y)) => {
-                let current_cost = cost_field[dim.project_to_field_idx(x, y)];
+                let current_cost = integration_field[dim.project_to_field_idx(x, y)];
                 if current_cost.is_none() {
                     continue;
                 }
@@ -72,21 +79,17 @@ pub fn calculate_integration_field(
                     let (x_next, y_next) = (x + off_x, y + off_y);
                     if dim.in_bounds(x_next, y_next) {
                         let opt_new_cost = cost_field[dim.project_to_field_idx(x_next, y_next)]
-                            .and_then(|c_static| {
-                                current_cost.map(|c_acc| distance_cost + c_static + c_acc)
-                            });
+                                            .and_then(|c_static| {
+                                                current_cost.map(|c_acc| distance_cost + c_static + c_acc)
+                                            });
                         let old_cost = integration_field[dim.project_to_field_idx(x_next, y_next)];
                         match (opt_new_cost, old_cost) {
-                            (Some(n), Some(o)) => {
-                                if n < o {
-                                    integration_field[dim.project_to_field_idx(x_next, y_next)] =
-                                        opt_new_cost;
-                                    queue.push_back((x_next, y_next))
-                                }
+                            (Some(n), Some(o)) if n < o => {
+                                integration_field[dim.project_to_field_idx(x_next, y_next)] = opt_new_cost;
+                                queue.push_back((x_next, y_next))
                             }
                             (Some(_), None) => {
-                                integration_field[dim.project_to_field_idx(x_next, y_next)] =
-                                    opt_new_cost;
+                                integration_field[dim.project_to_field_idx(x_next, y_next)] = opt_new_cost;
                                 queue.push_back((x_next, y_next))
                             }
                             _ => (),
@@ -96,7 +99,7 @@ pub fn calculate_integration_field(
 
                 visit(0, -1, 1.0); // north
                 visit(1, -1, SQRT_2); // north-east
-                visit(1, 0, 0.0); // east
+                visit(1, 0, 1.0); // east
                 visit(1, 1, SQRT_2); // south-east
                 visit(0, 1, 1.0); // south
                 visit(-1, 1, SQRT_2); // south-west
@@ -114,7 +117,7 @@ pub fn calculate_flow_field(dim: &Dimensions, integration_field: &IntegrationFie
         integration_field.len(),
         "Integration field size does not match dimensions!"
     );
-    let mut flow_field: FlowField = vec![None; dim.max_idx];
+    let mut flow_field: FlowField = vec![None; dim.max_idx()];
     let integration_at = |x, y| {
         if dim.in_bounds(x, y) {
             integration_field[dim.project_to_field_idx(x, y)]
@@ -124,6 +127,11 @@ pub fn calculate_flow_field(dim: &Dimensions, integration_field: &IntegrationFie
     };
     for x in 0..dim.width as isize {
         for y in 0..dim.height as isize {
+            let current_vec = &mut flow_field[dim.project_to_field_idx(x, y)];
+            if integration_field[dim.project_to_field_idx(x, y)].is_none(){
+                *current_vec = None;
+                continue
+            }
             let c_n = integration_at(x, y - 1);
             let c_ne = integration_at(x + 1, y - 1);
             let c_e = integration_at(x + 1, y);
@@ -133,23 +141,68 @@ pub fn calculate_flow_field(dim: &Dimensions, integration_field: &IntegrationFie
             let c_w = integration_at(x - 1, y);
             let c_nw = integration_at(x - 1, y - 1);
 
-            flow_field[dim.project_to_field_idx(x, y)] =
-                match [c_n, c_ne, c_e, c_se, c_s, c_sw, c_w, c_nw]
+            const V_N: (f32, f32) = (0., -1.);
+            const V_NE: (f32, f32) = (FRAC_1_SQRT_2, -FRAC_1_SQRT_2);
+            const V_E: (f32, f32) = (1., 0.);
+            const V_SE: (f32, f32) = (FRAC_1_SQRT_2, FRAC_1_SQRT_2);
+            const V_S: (f32, f32) = (0., 1.);
+            const V_SW: (f32, f32) = (-FRAC_1_SQRT_2, FRAC_1_SQRT_2);
+            const V_W: (f32, f32) = (-1., 0.);
+            const V_NW: (f32, f32) = (-FRAC_1_SQRT_2, -FRAC_1_SQRT_2);
+
+            *current_vec = {
+                let c = *[c_n, c_ne, c_e, c_se, c_s, c_sw, c_w, c_nw]
                     .iter()
-                    .reduce(|m, i| if i < m { m } else { i })
-                    .unwrap()
-                {
-                    m if m == &c_n => c_n.map(|_| (0., -1.)),
-                    m if m == &c_ne => c_ne.map(|_| (FRAC_1_SQRT_2, -FRAC_1_SQRT_2)),
-                    m if m == &c_e => c_e.map(|_| (1., 0.)),
-                    m if m == &c_se => c_se.map(|_| (FRAC_1_SQRT_2, FRAC_1_SQRT_2)),
-                    m if m == &c_s => c_s.map(|_| (0., 1.)),
-                    m if m == &c_sw => c_sw.map(|_| (-FRAC_1_SQRT_2, FRAC_1_SQRT_2)),
-                    m if m == &c_w => c_w.map(|_| (-1., 0.)),
-                    m if m == &c_nw => c_nw.map(|_| (-FRAC_1_SQRT_2, -FRAC_1_SQRT_2)),
-                    _ => unreachable!(),
-                };
+                    .reduce(|last_lowest, i| 
+                        match (i,last_lowest){
+                            (Some(c),Some(d)) if c < d => i,
+                            (Some(_c),None) => i,
+                            _ => last_lowest
+                        }
+                    ).unwrap();
+                if c == c_n {
+                    c_n.map(|_| V_N)
+                } else if c == c_ne {
+                    c_ne.map(|_| V_NE)
+                } else if c == c_e {
+                    c_e.map(|_| V_E)
+                } else if c == c_se {
+                    c_se.map(|_| V_SE)
+                } else if c == c_s {
+                    c_s.map(|_| V_S)
+                } else if c == c_sw {
+                    c_sw.map(|_| V_SW)
+                } else if c == c_w {
+                    c_w.map(|_| V_W)
+                } else if c == c_nw {
+                    c_nw.map(|_| V_NW)
+                } else {
+                    unreachable!()
+                }
+            }
         }
     }
     flow_field
+}
+
+#[cfg(test)]
+mod test {
+    use crate::algo::*;
+    use std::f32::consts::{SQRT_2};
+
+    #[test]
+    fn small_integration_field(){
+        let cost_field = vec![ Some(0.);9 ];
+        let integration_field = crate::algo::calculate_integration_field(
+            &Dimensions::new(3,3),
+            (1,1),
+            &cost_field);
+        assert_eq!(integration_field, 
+            vec![Some(SQRT_2), Some(1.), Some(SQRT_2),
+                 Some(1.), Some(0.), Some(1.),
+                 Some(SQRT_2), Some(1.), Some(SQRT_2)],
+                 "integration field doesn't match."
+        )
+
+    }
 }

@@ -1,0 +1,25 @@
+extends Node2D
+
+onready var _tile_map = $TileMap
+onready var _flow_field_gen = $FlowFieldGenerator
+var _baked_flow_fields : Resource
+
+var _agents := []
+
+var _agent_pre := preload("BakedAgent.tscn")
+
+func _unhandled_input(event):
+	if event is InputEventKey and event.is_pressed() and event.scancode == KEY_SPACE:
+		var agent = _agent_pre.instance()
+		_agents.append(agent)
+		agent.global_position = get_global_mouse_position()
+		agent.set_tilemap(_tile_map)
+		agent.set_baked_flow_fields(_baked_flow_fields)
+		_tile_map.add_child(agent)
+	if event is InputEventMouseButton and event.button_index == BUTTON_LEFT:
+		var mouse_tile_pos = get_global_mouse_position()
+		for agent in _agents:
+			agent.walk_to_world_position(mouse_tile_pos)
+
+func _ready():
+	_baked_flow_fields = _flow_field_gen.bake_flowfields()

@@ -33,7 +33,7 @@ impl FlowFieldFactory {
     }
 }
 
-#[derive(NativeClass)]
+#[derive(NativeClass, ToVariant, FromVariant, Clone)]
 #[inherit(Resource)]
 #[register_with(Self::register_properties)]
 pub struct FlowField {
@@ -140,7 +140,7 @@ impl FlowField {
                 godot_error!("FlowField: {}", msg);
             }
             Ok((x, y)) => match self.flow_internal((x, y)) {
-                Err(m) => godot_error!("FlowField: {}", m),
+                Err(m) => godot_warn!("FlowField: {}", m),
                 Ok((vx, vy)) => return Vector2 { x: vx, y: vy },
             },
         }
@@ -150,7 +150,7 @@ impl FlowField {
 
 pub struct BakedFlowFieldsFactory {}
 impl BakedFlowFieldsFactory {
-    pub fn create(dim: Dimensions, fields: Vec<Instance<FlowField>>) -> BakedFlowFields {
+    pub fn create(dim: Dimensions, fields: Vec<FlowField>) -> BakedFlowFields {
         BakedFlowFields {
             dim,
             width: dim.width() as u64,
@@ -160,7 +160,7 @@ impl BakedFlowFieldsFactory {
     }
 }
 
-#[derive(NativeClass)]
+#[derive(NativeClass, ToVariant, FromVariant)]
 #[inherit(Resource)]
 #[register_with(Self::register_properties)]
 pub struct BakedFlowFields {
@@ -170,7 +170,7 @@ pub struct BakedFlowFields {
     #[property]
     height: u64,
     #[property]
-    flow_fields: Vec<Instance<FlowField>>,
+    flow_fields: Vec<FlowField>,
 }
 impl HasDim for BakedFlowFields {
     fn width(&self) -> usize {
@@ -197,10 +197,8 @@ impl BakedFlowFields {
     fn register_properties(builder: &ClassBuilder<BakedFlowFields>) {
         builder
             .property("field")
-            .with_getter(|s, _| s.flow_fields.to_owned())
-            .with_setter(|s: &mut Self, _, new_val: Vec<Instance<FlowField>>| {
-                s.flow_fields = new_val
-            })
+            .with_getter(|s, _| s.flow_fields.clone())
+            .with_setter(|s: &mut Self, _, new_val: Vec<FlowField>| s.flow_fields = new_val)
             .with_default(vec![])
             .done();
         builder
@@ -237,14 +235,8 @@ impl BakedFlowFields {
             }
             Ok(((to_x, to_y), (from_x, from_y))) => {
                 self.dim.in_bounds(to_x, to_y)
-                    && unsafe {
-                        self.flow_fields[self.dim.project_to_field_idx(to_x, to_y)].assume_safe()
-                    }
-                    .map(|ff, _| ff.can_flow_internal((from_x, from_y)))
-                    .unwrap_or_else(|e| {
-                        godot_error!("BakedFlowFields: Error querying baked flow field {}", e);
-                        false
-                    })
+                    && self.flow_fields[self.dim.project_to_field_idx(to_x, to_y)]
+                        .can_flow_internal((from_x, from_y))
             }
         }
     }
@@ -261,24 +253,14 @@ impl BakedFlowFields {
                 godot_error!("FlowField: {}", msg);
                 Vector2::ZERO
             }
-            Ok(((to_x, to_y), (from_x, from_y))) => {
-                unsafe { self.flow_fields[self.dim.project_to_field_idx(to_x, to_y)].assume_safe() }
-                    .map(|ff, _| {
-                        ff.flow_internal((from_x, from_y))
-                            .map(|(vx, vy)| Vector2 { x: vx, y: vy })
-                            .unwrap_or_else(|e| {
-                                godot_error!(
-                                    "BakedFlowField: Error querying baked flow field {}",
-                                    e
-                                );
-                                Vector2::ZERO
-                            })
-                    })
-                    .unwrap_or_else(|e| {
-                        godot_error!("BakedFlowField: Error querying baked flow field {}", e);
-                        Vector2::ZERO
-                    })
-            }
+            Ok(((to_x, to_y), (from_x, from_y))) => 
+                self.flow_fields [self.dim.project_to_field_idx(to_x, to_y)]
+                .flow_internal((from_x, from_y))
+                .map(|(vx, vy)| Vector2 { x: vx, y: vy })
+                .unwrap_or_else(|e| {
+                    godot_warn!("BakedFlowField: Error querying baked flow field {}", e);
+                    Vector2::ZERO
+                }),
         }
     }
 }

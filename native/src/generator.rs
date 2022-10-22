@@ -11,7 +11,6 @@ use crate::tilecost::{self};
 #[inherit(Node)]
 pub struct FlowFieldGenerator {
     pub tile_map_path: NodePath,
-    pub flow_field_path: GodotString,
 }
 
 #[methods]
@@ -21,7 +20,6 @@ impl FlowFieldGenerator {
     }
 
     fn register_properties(builder: &ClassBuilder<FlowFieldGenerator>) {
-        use gdnative::export::hint::*;
         builder
             .property::<NodePath>("tile_map_path")
             .with_getter(|n: &Self, _base: TRef<Node>| n.tile_map_path.new_ref())
@@ -29,17 +27,6 @@ impl FlowFieldGenerator {
                 n.tile_map_path = new_value
             })
             .with_default(NodePath::default())
-            .done();
-        builder
-            .property::<GodotString>("flow_field_path")
-            .with_getter(|n: &Self, _base: TRef<Node>| n.flow_field_path.new_ref())
-            .with_setter(|n: &mut Self, _base: TRef<Node>, new_value: GodotString| {
-                n.flow_field_path = new_value
-            })
-            .with_hint(StringHint::File(EnumHint::new(vec![
-                "*.flowfields".to_owned()
-            ])))
-            .with_default(GodotString::default())
             .done();
     }
 
@@ -169,10 +156,8 @@ impl FlowFieldGenerator {
                     "FlowFieldGenerator: Baking {} Flow Fields. This might take a while...",
                     dim.max_idx()
                 );
-                let flow_fields: Vec<Instance<crate::flowfield::FlowField>> = (0..dim.height()
-                    as isize)
-                    .map(|y| (0..dim.width() as isize).map(move |x| (x, y)))
-                    .flatten()
+                let flow_fields: Vec<crate::flowfield::FlowField> = (0..dim.height() as isize)
+                    .flat_map(|y| (0..dim.width() as isize).map(move |x| (x, y)))
                     .collect::<Vec<(isize, isize)>>()
                     .into_par_iter()
                     .map(move |(x, y)| {
@@ -180,19 +165,13 @@ impl FlowFieldGenerator {
                             algo::calculate_integration_field(dim, (x, y), cost);
                         let field = algo::calculate_flow_field(dim, &integration_field);
                         crate::flowfield::FlowFieldFactory::create(d, field)
-                            .emplace()
-                            .into_shared()
                     })
                     .collect();
                 godot_print!(
                     "FlowFieldGenerator: Successfully baked {} Flow Fields to Resource!",
                     dim.max_idx()
                 );
-                Some(
-                    BakedFlowFieldsFactory::create(d, flow_fields)
-                        .emplace()
-                        .into_shared(),
-                )
+                Some(BakedFlowFieldsFactory::create(d, flow_fields).emplace().into_shared())
             }
             Err(m) => {
                 godot_error!("FlowFieldGenerator: Error calculating cost map: {}", m);

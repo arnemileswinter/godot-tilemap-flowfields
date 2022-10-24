@@ -43,8 +43,8 @@ The [Baked Example Scene](https://github.com/arnemileswinter/godot-tilemap-flowf
 
 ## Platforms
 
-Currently only Linux/X11 x86_64 is officially compiled.
-Windows support is coming ASAP.
+Currently Linux/X11 x86_64 and windows-x64 is officially compiled.
+If you have the resources to build for darwin or other targets, please don't hesitate to open a PR!
 
 ## Contributing
 

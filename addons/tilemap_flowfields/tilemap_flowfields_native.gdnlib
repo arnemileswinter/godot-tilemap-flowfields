@@ -7,8 +7,10 @@ reloadable=false
 
 [entry]
 
+Windows.64="res://addons/tilemap_flowfields/tilemap_flowfields_native.dll"
 X11.64="res://addons/tilemap_flowfields/libflowfield_native.so"
 
 [dependencies]
 
+Windows.64=[  ]
 X11.64=[  ]
